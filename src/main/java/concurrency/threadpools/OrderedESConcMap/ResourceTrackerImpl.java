@@ -82,16 +82,24 @@ class OrderedExecutor {
             return;
         }
 
+        // computeIfPresent attempts to retrieve the queue associated with the given key.
+        // If a queue exists for the key, the provided lambda function is executed.
         Queue<Runnable> queueForKey = taskMap.computeIfPresent(key, (k, v) -> {
             v.add(task);
             return v;
         });
+        // If no queue exist, then the computeIfPresent returns null.
         if (queueForKey == null) {
             // There was no running task with this key
             Queue<Runnable> newQ = new QueueWithHashCodeAndEquals<Runnable>(new ConcurrentLinkedQueue<Runnable>());
             newQ.add(task);
             // Use putIfAbsent because this execute() method can be called concurrently as well
+            // attempts to put the new queue into the map,
+            // but only if there isn't already a queue associated with that key
             queueForKey = taskMap.putIfAbsent(key, newQ);
+
+            // If another thread managed to add a queue in the time between the null check and the putIfAbsent call,
+            // then putIfAbsent returns the existing queue, and the current task is added to that queue.
             if (queueForKey != null)
                 queueForKey.add(task);
             delegate.execute(new InternalRunnable(key));

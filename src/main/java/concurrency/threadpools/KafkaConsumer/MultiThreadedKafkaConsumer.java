@@ -12,12 +12,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MultiThreadedKafkaConsumer implements Runnable, ConsumerRebalanceListener {
 
     private final KafkaConsumer<String, String> consumer;
     private final ExecutorService executor = Executors.newFixedThreadPool(8);
+    private final ExecutorService x = new  ScheduledThreadPoolExecutor(1);
     private final Map<TopicPartition, Task> activeTasks = new HashMap<>();
     private final Map<TopicPartition, OffsetAndMetadata> offsetsToCommit = new HashMap<>();
     private final AtomicBoolean stopped = new AtomicBoolean(false);
